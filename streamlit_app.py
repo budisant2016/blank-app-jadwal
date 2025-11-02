@@ -89,7 +89,7 @@ def main():
                 domain = url.split('//')[-1].split('/')[0].replace('.', '_')
                 import datetime
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"cleaned_{domain}_{timestamp}.txt"
+                filename = f"cleaned_{domain}.txt"
                 
                 # Step 4: Simpan ke static folder
                 file_path = save_to_static_folder(cleaned_content, filename)
