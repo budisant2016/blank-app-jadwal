@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import re
 
 def clean_html_content(html_content):
     """
@@ -32,14 +31,6 @@ def clean_html_content(html_content):
     
     return str(soup)
 
-def save_to_txt(content, filename):
-    """
-    Menyimpan konten ke file txt
-    """
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(content)
-    return filename
-
 def main():
     st.set_page_config(
         page_title="HTML Content Cleaner",
@@ -52,12 +43,15 @@ def main():
     Aplikasi ini akan:
     1. Membaca konten dari URL yang Anda masukkan
     2. Menghapus elemen-elemen HTML tertentu
-    3. Menyimpan hasilnya ke file TXT yang dapat diunduh
+    3. Menampilkan hasilnya langsung di halaman ini
     """)
     
     # Input URL
-    url = "https://www.persebaya.id/jadwal-pertandingan/91/persebaya-surabaya"  # Default value
-    
+    url = st.text_input(
+        "Masukkan URL:",
+        placeholder="https://example.com",
+        value="https://www.persebaya.id"  # Default value
+    )
     
     # Tampilkan elemen yang akan dihapus
     with st.expander("Elemen yang akan dihapus:"):
@@ -69,84 +63,81 @@ def main():
         - <div id="footer-top" class="row align-items-center ...">
         """)
     
-    col1, col2 = st.columns(2)
+    if st.button("📥 Ambil dan Bersihkan Konten", type="primary"):
+        if not url:
+            st.error("⚠️ Silakan masukkan URL terlebih dahulu!")
+            return
+        
+        try:
+            with st.spinner("Sedang mengambil dan membersihkan konten..."):
+                # Headers untuk menghindari blokir
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                
+                # Ambil konten dari URL
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+                
+                # Bersihkan konten HTML
+                cleaned_content = clean_html_content(response.text)
+                
+                # Simpan ke session state
+                st.session_state.cleaned_content = cleaned_content
+                st.session_state.original_content = response.text
+                
+                st.success("✅ Konten berhasil diambil dan dibersihkan!")
+                
+        except requests.exceptions.RequestException as e:
+            st.error(f"❌ Gagal mengambil konten: {str(e)}")
+        except Exception as e:
+            st.error(f"❌ Terjadi kesalahan: {str(e)}")
     
-    with col1:
-        if st.button("📥 Ambil dan Bersihkan Konten", type="primary"):
-            if not url:
-                st.error("⚠️ Silakan masukkan URL terlebih dahulu!")
-                return
-            
-            try:
-                with st.spinner("Sedang mengambil dan membersihkan konten..."):
-                    # Headers untuk menghindari blokir
-                    headers = {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                    }
-                    
-                    # Ambil konten dari URL
-                    response = requests.get(url, headers=headers, timeout=10)
-                    response.raise_for_status()
-                    
-                    # Bersihkan konten HTML
-                    cleaned_content = clean_html_content(response.text)
-                    
-                    # Simpan ke session state
-                    st.session_state.cleaned_content = cleaned_content
-                    st.session_state.original_content = response.text
-                    
-                    st.success("✅ Konten berhasil diambil dan dibersihkan!")
-                    
-            except requests.exceptions.RequestException as e:
-                st.error(f"❌ Gagal mengambil konten: {str(e)}")
-            except Exception as e:
-                st.error(f"❌ Terjadi kesalahan: {str(e)}")
-    
-    with col2:
-        if 'cleaned_content' in st.session_state:
-            # Buat nama file berdasarkan URL
-            domain = url.split('//')[-1].split('/')[0].replace('.', '_')
-            filename = f"cleaned_{domain}.txt"
-            
-            # Simpan ke file
-            file_path = save_to_txt(st.session_state.cleaned_content, filename)
-            st.error(f"❌ File Path: {file_path}")
-            
-            # Tampilkan preview
-            with st.expander("📋 Preview Konten yang Sudah Dibersihkan"):
-                st.text_area(
-                    "Konten (pertama 2000 karakter):",
-                    st.session_state.cleaned_content[:2000] + "..." if len(st.session_state.cleaned_content) > 2000 else st.session_state.cleaned_content,
-                    height=200
-                )
-            
-            # Download button
-            st.download_button(
-                label="📥 Download File TXT",
-                data=st.session_state.cleaned_content,
-                file_name=filename,
-                mime="text/plain",
-                help="Klik untuk mengunduh file TXT yang sudah dibersihkan"
+    # Tampilkan hasil jika sudah ada
+    if 'cleaned_content' in st.session_state:
+        st.markdown("---")
+        st.subheader("📋 Hasil Konten yang Sudah Dibersihkan")
+        
+        # Tampilkan konten lengkap dalam text area yang dapat di-scroll
+        st.text_area(
+            "Konten HTML yang sudah dibersihkan:",
+            st.session_state.cleaned_content,
+            height=600,
+            key="cleaned_content_display"
+        )
+        
+        # Tampilkan statistik
+        st.markdown("---")
+        st.subheader("📊 Statistik")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric(
+                "Konten Asli", 
+                f"{len(st.session_state.original_content):,} karakter"
             )
-            
-            # Tampilkan statistik
-            col_stat1, col_stat2, col_stat3 = st.columns(3)
-            with col_stat1:
-                st.metric("Konten Asli", f"{len(st.session_state.original_content):,} chars")
-            with col_stat2:
-                st.metric("Setelah Dibersihkan", f"{len(st.session_state.cleaned_content):,} chars")
-            with col_stat3:
-                reduction = len(st.session_state.original_content) - len(st.session_state.cleaned_content)
-                st.metric("Pengurangan", f"{reduction:,} chars")
+        with col2:
+            st.metric(
+                "Setelah Dibersihkan", 
+                f"{len(st.session_state.cleaned_content):,} karakter"
+            )
+        with col3:
+            reduction = len(st.session_state.original_content) - len(st.session_state.cleaned_content)
+            reduction_percent = (reduction / len(st.session_state.original_content)) * 100
+            st.metric(
+                "Pengurangan", 
+                f"{reduction:,} karakter",
+                f"{reduction_percent:.1f}%"
+            )
 
     # Informasi tambahan
     st.markdown("---")
     st.markdown("""
     ### 📝 Cara Menggunakan:
-    1. Masukkan URL website yang ingin dibersihkan
+    1. Masukkan URL website yang ingin dibersihkan (contoh: https://www.persebaya.id)
     2. Klik tombol "Ambil dan Bersihkan Konten"
-    3. Preview hasil akan ditampilkan
-    4. Klik "Download File TXT" untuk mengunduh hasil
+    3. Hasil akan langsung ditampilkan di text area di bawah
+    4. Anda dapat menyalin konten langsung dari text area tersebut
     """)
 
 if __name__ == "__main__":
