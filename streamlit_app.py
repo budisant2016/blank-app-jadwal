@@ -46,7 +46,7 @@ def save_to_static_folder(content, filename):
     
     return file_path
 
-def upload_via_ftp(content, filename, ftp_config):
+def upload_via_ftp(content, filename):
     """
     Upload file via FTP
     """
