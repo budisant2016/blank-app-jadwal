@@ -31,21 +31,6 @@ def clean_html_content(html_content):
     
     return str(soup)
 
-def save_to_static_folder(content, filename):
-    """
-    Menyimpan file ke folder static Streamlit
-    """
-    # Buat folder static jika belum ada
-    static_dir = Path("static")
-    static_dir.mkdir(exist_ok=True)
-    
-    file_path = static_dir / filename
-    
-    with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(content)
-    
-    return file_path
-
 def upload_via_ftp(content, filename):
     """
     Upload file via FTP
@@ -85,12 +70,8 @@ def main():
     """)
     
     # Input URL
-    url = st.text_input(
-        "Masukkan URL:",
-        placeholder="https://example.com",
-        value="https://www.persebaya.id"
-    )
-    
+    url = "https://www.persebaya.id/jadwal-pertandingan/91/persebaya-surabaya"
+        
     if st.button("🔄 Proses dan Simpan sebagai Static File", type="primary"):
         if not url:
             st.error("⚠️ Silakan masukkan URL terlebih dahulu!")
@@ -136,10 +117,7 @@ def main():
         4. File akan terdownload otomatis
         """)
         
-        # Tombol akses langsung
-        st.markdown(f'<a href="{st.session_state.file_url}" target="_blank"><button style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">🌐 Buka File di Tab Baru</button></a>', unsafe_allow_html=True)
-        
-        # Preview konten
+                # Preview konten
         with st.expander("📋 Preview Konten"):
             st.text_area(
                 "Preview (pertama 1000 karakter):",
