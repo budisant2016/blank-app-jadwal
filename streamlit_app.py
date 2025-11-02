@@ -13,24 +13,31 @@ def clean_html_content(html_content):
     
     # Daftar elemen yang akan dihapus
     elements_to_remove = [
-        {'name': 'div', 'class': 'container persebaya-nav'},
-        {'name': 'div', 'class': 'row mt-4 mb-2'},
-        {'name': 'form', 'action': 'https://www.persebaya.id/search/result'},
-        {'name': 'div', 'class': 'row mt-4 pl-md-5 pr-md-5'},
-        {'name': 'div', 'id': 'footer-top'}
-    ]
+            {'name': 'div', 'class': 'container persebaya-nav'},
+            {'name': 'h4', 'class': 'modal-title', 'text': 'Search'},
+            {'name': 'button', 'class': 'close', 'attrs': {'data-dismiss': 'modal'}},
+            {'name': 'div', 'class': 'row mt-4 mb-2'},
+            {'name': 'div', 'class': 'col-md-12 px-0 px-md-3'},
+            {'name': 'div', 'class': 'col-12 col-md-3 order-last order-md-last text-center'},
+            {'name': 'form', 'attrs': {'action': 'https://www.persebaya.id/search/result', 'class': 'form-inline navbar-right ml-auto', 'method': 'GET', 'role': 'search'}},
+            {'name': 'div', 'id': 'footer-top', 'class': 'row align-items-center text-center pb-5 pb-md-3 pt-md-4'}
+        ]
     
     # Menghapus setiap elemen yang ditentukan
-    for element in elements_to_remove:
-        if 'class' in element:
-            elements = soup.find_all(element['name'], class_=element['class'])
-        elif 'id' in element:
-            elements = soup.find_all(element['name'], id=element['id'])
-        elif 'action' in element:
-            elements = soup.find_all(element['name'], action=element['action'])
-        
-        for elem in elements:
-            elem.decompose()
+    for element_config in elements_to_remove:
+            if 'class' in element_config and 'text' in element_config:
+                elements = soup.find_all(element_config['name'], 
+                                       class_=element_config['class'],
+                                       string=element_config['text'])
+            elif 'class' in element_config:
+                elements = soup.find_all(element_config['name'], class_=element_config['class'])
+            elif 'attrs' in element_config:
+                elements = soup.find_all(element_config['name'], attrs=element_config['attrs'])
+            else:
+                elements = soup.find_all(element_config['name'])
+            
+            for element in elements:
+                element.decompose()
     
     return str(soup)
 
