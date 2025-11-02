@@ -40,19 +40,14 @@ def upload_via_ftp(content, filename, ftp_config):
     """
     try:
         # Connect to FTP server
-        st.info("🔄 Menghubungkan ke FTP server...")
         ftp = ftplib.FTP(ftp_config['host'])
         ftp.login(ftp_config['user'], ftp_config['pass'])
         
         # Change to target directory
         if 'path' in ftp_config:
-            st.info(f"📁 Pindah ke directory: {ftp_config['path']}")
             ftp.cwd(ftp_config['path'])
         
         # Upload file sebagai binary
-        st.info(f"📤 Mengupload file: {filename}")
-        
-        # Convert string to bytes dengan encoding UTF-8
         content_bytes = content.encode('utf-8')
         file_obj = BytesIO(content_bytes)
         
@@ -75,12 +70,7 @@ def main():
     )
     
     st.title("⚽ Persebaya Jadwal Auto Upload")
-    st.markdown("""
-    Aplikasi ini akan secara otomatis:
-    1. Mengambil jadwal pertandingan dari [Persebaya](https://www.persebaya.id/jadwal-pertandingan/91/persebaya-surabaya)
-    2. Membersihkan elemen HTML yang tidak diperlukan
-    3. Mengupload hasilnya ke hosting sebagai `jadwal.txt`
-    """)
+    st.info("Aplikasi sedang berjalan...")
     
     # Konfigurasi FTP (hardcoded sesuai permintaan)
     FTP_CONFIG = {
@@ -94,82 +84,84 @@ def main():
     TARGET_URL = "https://www.persebaya.id/jadwal-pertandingan/91/persebaya-surabaya"
     FILENAME = "jadwal.txt"
     
-    if st.button("🚀 Jalankan Proses Auto Upload", type="primary"):
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+    # Progress bar dan status
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    try:
+        # Step 1: Ambil konten dari URL
+        status_text.text("📥 Mengambil data dari Persebaya...")
+        progress_bar.progress(25)
         
-        try:
-            # Step 1: Ambil konten dari URL
-            status_text.text("📥 Mengambil data dari Persebaya...")
-            progress_bar.progress(25)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(TARGET_URL, headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        # Step 2: Bersihkan konten HTML
+        status_text.text("🧹 Membersihkan konten HTML...")
+        progress_bar.progress(50)
+        
+        cleaned_content = clean_html_content(response.text)
+        
+        # Tambahkan timestamp
+        timestamp = datetime.datetime.now().strftime("<!-- Generated at: %Y-%m-%d %H:%M:%S -->\n")
+        final_content = timestamp + cleaned_content
+        
+        # Step 3: Upload ke hosting via FTP
+        status_text.text("📤 Mengupload ke hosting...")
+        progress_bar.progress(75)
+        
+        success, message = upload_via_ftp(final_content, FILENAME, FTP_CONFIG)
+        
+        if success:
+            status_text.text("✅ Proses selesai!")
+            progress_bar.progress(100)
             
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+            st.success(f"""
+            ✅ **File berhasil diupload!**
             
-            response = requests.get(TARGET_URL, headers=headers, timeout=30)
-            response.raise_for_status()
+            **Detail:**
+            - File: `{FILENAME}`
+            - Host: `{FTP_CONFIG['host']}`
+            - Path: `{FTP_CONFIG['path']}`
+            - URL: `https://if0_40314646.ifastnet.com/{FILENAME}`
+            - Waktu: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+            """)
             
-            # Step 2: Bersihkan konten HTML
-            status_text.text("🧹 Membersihkan konten HTML...")
-            progress_bar.progress(50)
+            # Tampilkan preview
+            with st.expander("📋 Preview Konten (1000 karakter pertama)"):
+                st.text_area(
+                    "Konten yang diupload:",
+                    final_content[:1000] + "..." if len(final_content) > 1000 else final_content,
+                    height=300,
+                    key="preview"
+                )
             
-            cleaned_content = clean_html_content(response.text)
-            
-            # Tambahkan timestamp
-            timestamp = datetime.datetime.now().strftime("<!-- Generated at: %Y-%m-%d %H:%M:%S -->\n")
-            final_content = timestamp + cleaned_content
-            
-            # Step 3: Upload ke hosting via FTP
-            status_text.text("📤 Mengupload ke hosting...")
-            progress_bar.progress(75)
-            
-            success, message = upload_via_ftp(final_content, FILENAME, FTP_CONFIG)
-            
-            if success:
-                status_text.text("✅ Proses selesai!")
-                progress_bar.progress(100)
+            # Statistik
+            st.subheader("📊 Statistik")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Konten Asli", f"{len(response.text):,} char")
+            with col2:
+                st.metric("Setelah Dibersihkan", f"{len(final_content):,} char")
+            with col3:
+                reduction = len(response.text) - len(final_content)
+                reduction_percent = (reduction / len(response.text)) * 100
+                st.metric("Pengurangan", f"{reduction:,} char", f"{reduction_percent:.1f}%")
                 
-                st.success("""
-                ✅ **File berhasil diupload!**
-                
-                **Detail:**
-                - File: `jadwal.txt`
-                - Host: `ftpupload.net`
-                - Path: `htdocs`
-                - URL: `https://if0_40314646.ifastnet.com/jadwal.txt`
-                """)
-                
-                # Tampilkan preview
-                with st.expander("📋 Preview Konten (1000 karakter pertama)"):
-                    st.text_area(
-                        "Konten yang diupload:",
-                        final_content[:1000] + "..." if len(final_content) > 1000 else final_content,
-                        height=300,
-                        key="preview"
-                    )
-                
-                # Statistik
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Konten Asli", f"{len(response.text):,} char")
-                with col2:
-                    st.metric("Setelah Dibersihkan", f"{len(final_content):,} char")
-                with col3:
-                    reduction = len(response.text) - len(final_content)
-                    reduction_percent = (reduction / len(response.text)) * 100
-                    st.metric("Pengurangan", f"{reduction:,} char", f"{reduction_percent:.1f}%")
-                    
-            else:
-                st.error(f"❌ {message}")
-                progress_bar.progress(0)
-                
-        except requests.exceptions.RequestException as e:
-            st.error(f"❌ Gagal mengambil data dari Persebaya: {str(e)}")
+        else:
+            st.error(f"❌ {message}")
             progress_bar.progress(0)
-        except Exception as e:
-            st.error(f"❌ Terjadi kesalahan: {str(e)}")
-            progress_bar.progress(0)
+            
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Gagal mengambil data dari Persebaya: {str(e)}")
+        progress_bar.progress(0)
+    except Exception as e:
+        st.error(f"❌ Terjadi kesalahan: {str(e)}")
+        progress_bar.progress(0)
     
     # Informasi konfigurasi
     with st.expander("🔧 Konfigurasi Saat Ini"):
@@ -189,6 +181,7 @@ def main():
     - File disimpan di: `htdocs/jadwal.txt` pada hosting
     - File dapat diakses via: `https://if0_40314646.ifastnet.com/jadwal.txt`
     - Proses membersihkan 5 elemen HTML tertentu
+    - **Script berjalan otomatis setiap kali halaman ini diakses**
     """)
 
 if __name__ == "__main__":
