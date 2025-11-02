@@ -1,4 +1,6 @@
 import streamlit as st
+import ftplib
+from io import StringIO
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -44,6 +46,28 @@ def save_to_static_folder(content, filename):
     
     return file_path
 
+def upload_via_ftp(content, filename, ftp_config):
+    """
+    Upload file via FTP
+    """
+    try:
+        # Connect to FTP server
+        ftp = ftplib.FTP('ftpupload.net')
+        ftp.login('if0_40314646', 'sm5z3gpN4cvaR')
+        
+        # Change to target directory
+        ftp.cwd('htdocs')
+        
+        # Upload file
+        file_obj = StringIO(content)
+        ftp.storbinary(f'STOR {filename}', file_obj)
+        ftp.quit()
+        
+        return True, f"ftp://{ftp_config['ftpupload.net']}/{ftp_config.get('htdocs', '')}/{filename}"
+    
+    except Exception as e:
+        return False, str(e)
+
 def main():
     st.set_page_config(
         page_title="HTML Content Cleaner - Static Hosting",
@@ -88,51 +112,21 @@ def main():
                 # Step 3: Generate nama file unik
                 domain = url.split('//')[-1].split('/')[0].replace('.', '_')
                 import datetime
-                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"cleaned_{domain}.txt"
+                #timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                xfilename = f"jadwal.txt"
+                
+                upload_via_ftp(cleaned_content, filename)
                 
                 # Step 4: Simpan ke static folder
-                file_path = save_to_static_folder(cleaned_content, filename)
                 
-                # Dapatkan base URL aplikasi
-                try:
-                    # Coba dapatkan URL base dari session state
-                    if 'base_url' not in st.session_state:
-                        # Untuk Streamlit Cloud, format URL-nya seperti:
-                        # https://yourapp-name.streamlit.app/
-                        script_name = os.environ.get('STREAMLIT_SCRIPT_NAME', '')
-                        st.session_state.base_url = f"https://{st.secrets.get('URL', 'yourapp-name.streamlit.app')}"
-                    
-                    file_url = f"{st.session_state.base_url}/static/{filename}"
-                    
-                except:
-                    # Fallback: berikan instruksi manual
-                    file_url = f"/static/{filename}"
                 
-                st.session_state.cleaned_content = cleaned_content
-                st.session_state.original_content = response.text
-                st.session_state.file_url = file_url
-                st.session_state.filename = filename
-                st.session_state.local_path = str(file_path)
                 
-                st.success("✅ File berhasil disimpan sebagai static file!")
+                st.success("✅ File berhasil disimpan!")
                 
         except Exception as e:
             st.error(f"❌ Terjadi kesalahan: {str(e)}")
     
-    # Tampilkan hasil jika berhasil
-    if 'file_url' in st.session_state:
-        st.markdown("---")
-        st.subheader("📁 Static File Hasil")
-        
-        # Tampilkan URL file
-        st.success(f"**File berhasil disimpan:**")
-        st.markdown(f"### 🔗 File: `{st.session_state.filename}`")
-        
-        # URL untuk mengakses file
-        st.markdown("**URL untuk mengakses file:**")
-        st.code(st.session_state.file_url, language="text")
-        
+    
         # Instruksi penggunaan
         st.info("""
         **Cara mengakses file:**
