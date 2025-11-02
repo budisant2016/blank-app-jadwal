@@ -126,13 +126,13 @@ def main():
         st.subheader("📋 Hasil Konten yang Sudah Dibersihkan")
         
         # Tampilkan konten lengkap dalam text area yang dapat di-scroll
-        st.text_area(
-            "Konten HTML yang sudah dibersihkan:",
-            st.session_state.cleaned_content,
-            height=600,
-            key="cleaned_content_display"
-        )
-        upload_via_ftp(cleaned_content, 'testing.txt')
+        #st.text_area(
+        #    "Konten HTML yang sudah dibersihkan:",
+        #    st.session_state.cleaned_content,
+        #    height=600,
+        #    key="cleaned_content_display"
+        #)
+        upload_via_ftp(st.session_state.cleaned_content, 'testing.txt')
         
         # Tampilkan statistik
         st.markdown("---")
