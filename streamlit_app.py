@@ -1,9 +1,8 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import os
-import tempfile
-from urllib.parse import quote
+import base64
+from io import StringIO
 
 def clean_html_content(html_content):
     """
@@ -30,22 +29,18 @@ def clean_html_content(html_content):
             elements = soup.find_all(element['name'], action=element['action'])
         
         for elem in elements:
-            elem.decompose()  # Menghapus elemen dari pohon HTML
+            elem.decompose()
     
     return str(soup)
 
-def save_txt_file(content, filename):
+def create_download_link(content, filename):
     """
-    Menyimpan konten ke file TXT dan mengembalikan path
+    Membuat link download untuk konten
     """
-    # Buat direktori temporary jika belum ada
-    temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, filename)
-    
-    with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(content)
-    
-    return file_path
+    # Encode konten ke base64
+    b64 = base64.b64encode(content.encode()).decode()
+    href = f'<a href="data:file/txt;base64,{b64}" download="{filename}">📥 Download {filename}</a>'
+    return href
 
 def main():
     st.set_page_config(
@@ -60,22 +55,38 @@ def main():
     1. Membaca konten dari URL yang Anda masukkan
     2. Menghapus elemen-elemen HTML tertentu
     3. Menyimpan hasilnya ke file TXT
-    4. Menampilkan URL file TXT untuk diakses
+    4. Menyediakan link untuk mengakses file
     """)
     
-    # Input URL
     url = st.text_input(
         "Masukkan URL:",
         placeholder="https://example.com",
-        value="https://www.persebaya.id"  # Default value
+        value="https://www.persebaya.id"
     )
     
-    # Tampilkan elemen yang akan dihapus
-    with st.expander("Elemen yang akan dihapus:"):
-        st.code("""
-        - <div class="container persebaya-nav">
-        - <div class="row mt-4 mb-2">
-        - <form action="https://www.persebaya.id/search/result" ...>
-        - <div class="row mt-4 pl-md-5 pr-md-5">
-        - <div id="footer-top" class="row align-items-center ...">
-       
+    if st.button("📥 Proses dan Buat File TXT", type="primary"):
+        if not url:
+            st.error("⚠️ Silakan masukkan URL terlebih dahulu!")
+            return
+        
+        try:
+            with st.spinner("Sedang memproses..."):
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+                
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+                
+                cleaned_content = clean_html_content(response.text)
+                
+                # Generate nama file
+                domain = url.split('//')[-1].split('/')[0].replace('.', '_')
+                filename = f"cleaned_{domain}.txt"
+                
+                # Buat link download
+                download_link = create_download_link(cleaned_content, filename)
+                
+                st.session_state.cleaned_content = cleaned_content
+                st.session_state.original_content = response.text
+                st.session
