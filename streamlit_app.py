@@ -18,7 +18,7 @@ def upload_via_ftp(content, filename):
         
         # Upload file
         file_obj = StringIO(content)
-        st.markdown(file_obj)
+        st.markdown(content)
         ftp.storbinary(f'STOR {filename}', file_obj)
         ftp.quit()
         
