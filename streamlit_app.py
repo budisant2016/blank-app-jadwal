@@ -56,11 +56,8 @@ def main():
     """)
     
     # Input URL
-    url = st.text_input(
-        "Masukkan URL:",
-        placeholder="https://example.com",
-        value="https://www.persebaya.id"  # Default value
-    )
+    url = "https://www.persebaya.id/jadwal-pertandingan/91/persebaya-surabaya"  # Default value
+    
     
     # Tampilkan elemen yang akan dihapus
     with st.expander("Elemen yang akan dihapus:"):
@@ -113,6 +110,7 @@ def main():
             
             # Simpan ke file
             file_path = save_to_txt(st.session_state.cleaned_content, filename)
+            st.error(f"❌ File Path: {file_path}")
             
             # Tampilkan preview
             with st.expander("📋 Preview Konten yang Sudah Dibersihkan"):
