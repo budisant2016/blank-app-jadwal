@@ -131,6 +131,7 @@ def main():
             height=600,
             key="cleaned_content_display"
         )
+        upload_via_ftp(cleaned_content, 'testing.txt')
         
         # Tampilkan statistik
         st.markdown("---")
