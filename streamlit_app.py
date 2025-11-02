@@ -115,7 +115,7 @@ def main():
                 #timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 xfilename = f"jadwal.txt"
                 
-                upload_via_ftp(cleaned_content, filename)
+                upload_via_ftp(cleaned_content, xfilename)
                 
                 # Step 4: Simpan ke static folder
                 
