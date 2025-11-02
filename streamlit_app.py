@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import ftplib
-from io import StringIO
+from io import BytesIO
 import datetime
 
 def clean_html_content(html_content):
@@ -49,9 +49,14 @@ def upload_via_ftp(content, filename, ftp_config):
             st.info(f"📁 Pindah ke directory: {ftp_config['path']}")
             ftp.cwd(ftp_config['path'])
         
-        # Upload file
+        # Upload file sebagai binary
         st.info(f"📤 Mengupload file: {filename}")
-        file_obj = StringIO(content)
+        
+        # Convert string to bytes dengan encoding UTF-8
+        content_bytes = content.encode('utf-8')
+        file_obj = BytesIO(content_bytes)
+        
+        # Gunakan STORBINARY untuk upload file
         ftp.storbinary(f'STOR {filename}', file_obj)
         
         # Close connection
@@ -140,7 +145,8 @@ def main():
                     st.text_area(
                         "Konten yang diupload:",
                         final_content[:1000] + "..." if len(final_content) > 1000 else final_content,
-                        height=300
+                        height=300,
+                        key="preview"
                     )
                 
                 # Statistik
@@ -151,7 +157,8 @@ def main():
                     st.metric("Setelah Dibersihkan", f"{len(final_content):,} char")
                 with col3:
                     reduction = len(response.text) - len(final_content)
-                    st.metric("Pengurangan", f"{reduction:,} char")
+                    reduction_percent = (reduction / len(response.text)) * 100
+                    st.metric("Pengurangan", f"{reduction:,} char", f"{reduction_percent:.1f}%")
                     
             else:
                 st.error(f"❌ {message}")
