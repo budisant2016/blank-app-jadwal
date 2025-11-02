@@ -89,4 +89,44 @@ def main():
                 
                 st.session_state.cleaned_content = cleaned_content
                 st.session_state.original_content = response.text
-                st.session
+                st.session_state.download_link = download_link
+                st.session_state.filename = filename
+                
+                st.success("✅ File TXT berhasil dibuat!")
+                
+        except Exception as e:
+            st.error(f"❌ Terjadi kesalahan: {str(e)}")
+    
+    if 'download_link' in st.session_state:
+        st.markdown("---")
+        st.subheader("📁 File TXT Hasil")
+        
+        # Tampilkan link download
+        st.markdown(f"### 🌐 Link File: {st.session_state.filename}")
+        st.markdown(st.session_state.download_link, unsafe_allow_html=True)
+        
+        st.markdown("**Cara menggunakan:** Klik link di atas untuk mengunduh file TXT")
+        
+        # Preview konten
+        with st.expander("📋 Preview Konten"):
+            st.text_area(
+                "Preview (pertama 1000 karakter):",
+                st.session_state.cleaned_content[:1000] + "..." if len(st.session_state.cleaned_content) > 1000 else st.session_state.cleaned_content,
+                height=200
+            )
+        
+        # Statistik
+        st.markdown("---")
+        st.subheader("📊 Statistik")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Konten Asli", f"{len(st.session_state.original_content):,} char")
+        with col2:
+            st.metric("Hasil", f"{len(st.session_state.cleaned_content):,} char")
+        with col3:
+            reduction = len(st.session_state.original_content) - len(st.session_state.cleaned_content)
+            st.metric("Pengurangan", f"{reduction:,} char")
+
+if __name__ == "__main__":
+    main()
