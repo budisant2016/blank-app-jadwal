@@ -81,10 +81,10 @@ def main():
     
     # Konfigurasi FTP (hardcoded sesuai permintaan)
     FTP_CONFIG = {
-        'host': "ftpupload.net",
-        'user': "if0_40314646",
-        'pass': "sm5z3gpN4cvaR",
-        'path': "htdocs"
+        'host': "157.66.54.106",
+        'user': "appbonek",
+        'pass': "jikasupport081174",
+        'path': "/course.edukaze.com/databonek"
     }
     
     # URL target (hardcoded sesuai permintaan)
