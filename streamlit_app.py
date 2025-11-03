@@ -84,7 +84,7 @@ def main():
         'host': "157.66.54.106",
         'user': "appbonek",
         'pass': "jikasupport081174",
-        'path': "/course.edukaze.com/databonek"
+        'path': "/"
     }
     
     # URL target (hardcoded sesuai permintaan)
