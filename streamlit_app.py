@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import ftplib
 from io import BytesIO
 import datetime
-from datetime import datetime
+
 
 def clean_html_content(html_content):
     """
