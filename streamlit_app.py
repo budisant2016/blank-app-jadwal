@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import ftplib
 from io import BytesIO
 import datetime
+from datetime import datetime
 
 def clean_html_content(html_content):
     """
@@ -190,6 +191,21 @@ def main():
     - Proses membersihkan 5 elemen HTML tertentu
     - **Script berjalan otomatis setiap kali halaman ini diakses**
     """)
+
+    st.title("Streamlit Keep-Alive Demo 🚀")
+
+    st.write("Aplikasi ini menampilkan waktu saat ini dan bisa dipakai untuk uji anti-sleep.")
+    
+    st.write("Waktu sekarang:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    
+    # Opsional: tampilan log keepalive
+    try:
+        with open("../keepalive.log") as f:
+            log = f.readlines()[-5:]  # 5 log terakhir
+        st.write("Log keepalive terakhir:")
+        st.write("".join(log))
+    except:
+        st.write("Belum ada log keepalive.")
 
 if __name__ == "__main__":
     main()
