@@ -196,7 +196,7 @@ def main():
 
     st.write("Aplikasi ini menampilkan waktu saat ini dan bisa dipakai untuk uji anti-sleep.")
     
-    st.write("Waktu sekarang:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    st.write("Waktu sekarang:",  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
     # Opsional: tampilan log keepalive
     try:
